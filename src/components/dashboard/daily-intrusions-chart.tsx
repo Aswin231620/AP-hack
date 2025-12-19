@@ -3,34 +3,33 @@
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-const chartData = [
-  { day: "Mon", intrusions: 18 },
-  { day: "Tue", intrusions: 21 },
-  { day: "Wed", intrusions: 10 },
-  { day: "Thu", intrusions: 25 },
-  { day: "Fri", intrusions: 12 },
-  { day: "Sat", intrusions: 30 },
-  { day: "Sun", intrusions: 28 },
-]
+import { TrendingUp } from "lucide-react"
 
 const chartConfig = {
   intrusions: {
     label: "Intrusions",
-    color: "hsl(var(--accent))",
+    color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
 
-export function DailyIntrusionsChart() {
+type ChartData = {
+  day: string,
+  intrusions: number,
+}[]
+
+export function DailyIntrusionsChart({ data }: { data: ChartData }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Daily Intrusions</CardTitle>
-        <CardDescription>Last 7 days</CardDescription>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <TrendingUp className="h-5 w-5 text-muted-foreground" />
+          Weekly Intrusions
+        </CardTitle>
+        <CardDescription>Intrusions over the last 7 days</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-64 w-full">
-          <BarChart accessibilityLayer data={chartData}>
+        <ChartContainer config={chartConfig} className="h-60 w-full">
+          <BarChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="day"
@@ -51,7 +50,7 @@ export function DailyIntrusionsChart() {
               cursor={false}
               content={<ChartTooltipContent indicator="dot" />}
             />
-            <Bar dataKey="intrusions" fill="var(--color-intrusions)" radius={4} />
+            <Bar dataKey="intrusions" fill="var(--color-intrusions)" radius={8} />
           </BarChart>
         </ChartContainer>
       </CardContent>

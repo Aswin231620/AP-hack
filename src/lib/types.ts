@@ -1,14 +1,13 @@
 export type SensorData = {
   isAnimalDetected: boolean;
   distance: number;
-  servoStatus: 'ON' | 'OFF';
-  vibratorStatus: 'ON' | 'OFF';
+  repellentStatus: 'ACTIVE' | 'IDLE';
   timestamp: number;
 };
 
 export type HistoryLogEntry = {
   id: string;
   timestamp: number;
-  status: 'SAFE' | 'INTRUSION DETECTED';
+  status: 'INTRUSION DETECTED';
   distance: number | null;
 };

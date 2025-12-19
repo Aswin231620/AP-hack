@@ -1,134 +1,143 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Camera, BrainCircuit, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Camera, BrainCircuit, Loader2, Sparkles, AlertCircle, UploadCloud, X } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { identifySpeciesAction } from '@/lib/actions';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const initialState = {
-  data: null,
-  error: null,
-  timestamp: Date.now(),
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="animate-spin mr-2" /> : <BrainCircuit className="mr-2" />}
-      Identify Species
-    </Button>
-  );
-}
+import { useToast } from '@/hooks/use-toast';
 
 export function SpeciesIdentifier() {
-  const [state, formAction] = useFormState(identifySpeciesAction, initialState);
+  const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isIdentifying, setIsIdentifying] = useState(false);
+  const [result, setResult] = useState<{ data: any; error: string | null } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFileChange = useCallback(async (file: File | null) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const dataUrl = reader.result as string;
+      setPreviewUrl(dataUrl);
+      setIsIdentifying(true);
+      setResult(null);
+
+      const formData = new FormData();
+      formData.append('photo', dataUrl);
+
+      try {
+        const res = await identifySpeciesAction(null, formData);
+        setResult(res);
+        if(res.error) {
+          toast({
+            variant: 'destructive',
+            title: 'Identification Failed',
+            description: res.error,
+          });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        setResult({ data: null, error: errorMessage });
+        toast({
+            variant: 'destructive',
+            title: 'Identification Failed',
+            description: errorMessage,
+          });
+      } finally {
+        setIsIdentifying(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [toast]);
   
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-        const formData = new FormData();
-        formData.append('photo', reader.result as string);
-        formRef.current?.requestSubmit();
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
-  };
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileChange(event.target.files?.[0] || null);
+    event.target.value = ''; // Reset file input
+  }
 
   const handleChooseFile = () => {
     fileInputRef.current?.click();
   };
   
-  useEffect(() => {
-    if (formRef.current) {
-        formRef.current.reset();
-        setPreviewUrl(null);
-    }
-  }, [state.timestamp]);
-
+  const clearPreview = () => {
+    setPreviewUrl(null);
+    setResult(null);
+    setIsIdentifying(false);
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="text-accent" />
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Sparkles className="h-5 w-5 text-accent" />
           AI Species Identifier
         </CardTitle>
         <CardDescription>
           Upload an image of an intruder to identify its species.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-4">
-            <form ref={formRef} action={formAction} className="hidden">
-                 <Input
-                    id="photo"
-                    name="photo"
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                 />
-                 <input type="hidden" name="photo" value={previewUrl || ''} />
-            </form>
-            <div 
-                className="relative aspect-video w-full overflow-hidden rounded-md border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
-                onClick={handleChooseFile}
-            >
-                {previewUrl ? (
-                    <Image src={previewUrl} alt="Intruder preview" fill className="object-cover" />
-                ) : (
-                    <div className="text-center">
-                        <Camera className="mx-auto h-8 w-8 mb-2" />
-                        <p className="font-semibold">Click to upload</p>
-                        <p className="text-xs">or drag and drop an image</p>
-                    </div>
-                )}
-            </div>
-            <Button type="button" variant="outline" onClick={handleChooseFile} className="w-full">
-              <Camera className="mr-2" />
-              Choose a different image
-            </Button>
+      <CardContent className="space-y-4">
+        <div 
+            className="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground bg-muted/20 hover:border-primary hover:text-primary transition-colors cursor-pointer"
+            onClick={!previewUrl ? handleChooseFile : undefined}
+        >
+            <Input
+                id="photo"
+                name="photo"
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={onFileChange}
+                className="hidden"
+            />
+            {previewUrl ? (
+                <>
+                    <Image src={previewUrl} alt="Intruder preview" fill className="object-contain" />
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-background/50 hover:bg-background" onClick={clearPreview}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                </>
+            ) : (
+                <div className="text-center p-4">
+                    <UploadCloud className="mx-auto h-10 w-10 mb-2" />
+                    <p className="font-semibold">Click to upload image</p>
+                    <p className="text-xs">Your privacy is respected. Images are not stored.</p>
+                </div>
+            )}
         </div>
 
-        <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border bg-background/50 p-4 h-full min-h-[200px]">
-          {state.error && (
-             <Alert variant="destructive">
+        <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border bg-background p-4 h-full min-h-[120px]">
+          {isIdentifying ? (
+            <div className="text-center space-y-2 animate-pulse">
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground font-medium">Analyzing image...</p>
+            </div>
+          ) : result?.error ? (
+             <Alert variant="destructive" className="w-full">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Identification Failed</AlertTitle>
-              <AlertDescription>{state.error}</AlertDescription>
+              <AlertDescription>{result.error}</AlertDescription>
             </Alert>
-          )}
-          {state.data && !state.error &&(
+          ) : result?.data ? (
             <div className="text-center space-y-2 animate-in fade-in">
                 <p className="text-muted-foreground">Identified Species:</p>
-                <h3 className="text-3xl font-bold text-accent">{state.data.species}</h3>
+                <h3 className="text-3xl font-bold text-accent">{result.data.species}</h3>
                 <p className="text-muted-foreground">Confidence:</p>
-                <Badge variant="secondary" className="text-lg">
-                    {(state.data.confidence * 100).toFixed(1)}%
+                <Badge variant="secondary" className="text-lg font-semibold">
+                    {(result.data.confidence * 100).toFixed(1)}%
                 </Badge>
             </div>
-          )}
-          {!state.data && !state.error && (
+          ) : (
              <div className="text-center text-muted-foreground">
-                <BrainCircuit className="mx-auto h-12 w-12 mb-4" />
-                <p>Awaiting image for analysis...</p>
+                <BrainCircuit className="mx-auto h-10 w-10 mb-2" />
+                <p className="font-medium">Awaiting image for analysis</p>
              </div>
           )}
         </div>

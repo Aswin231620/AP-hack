@@ -4,15 +4,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import type { HistoryLogEntry } from '@/lib/types';
 import { format } from 'date-fns';
-import { History } from 'lucide-react';
+import { History, ShieldAlert } from 'lucide-react';
 
 export function HistoryLog({ logs }: { logs: HistoryLogEntry[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            Intrusion History
+        <CardTitle className="flex items-center gap-2 text-lg">
+            <History className="h-5 w-5 text-muted-foreground" />
+            Recent Activity
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -20,24 +20,25 @@ export function HistoryLog({ logs }: { logs: HistoryLogEntry[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Distance</TableHead>
+                <TableHead>Event</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead className="text-right">Details</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {logs.length > 0 ? (
                 logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-medium">
-                      {format(new Date(log.timestamp), 'PPpp')}
-                    </TableCell>
                     <TableCell>
-                      <Badge variant={log.status === 'INTRUSION DETECTED' ? 'destructive' : 'secondary'}>
-                        {log.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="h-5 w-5 text-destructive" />
+                        <span className="font-medium text-destructive">Intrusion</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(log.timestamp), 'p')}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
                       {log.distance != null ? `${log.distance} cm` : 'N/A'}
                     </TableCell>
                   </TableRow>
@@ -45,7 +46,7 @@ export function HistoryLog({ logs }: { logs: HistoryLogEntry[] }) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
-                    No intrusion events recorded yet.
+                    No intrusions recorded recently.
                   </TableCell>
                 </TableRow>
               )}

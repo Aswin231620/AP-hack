@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 type StatusIndicatorProps = {
   isDetected: boolean;
@@ -6,28 +7,26 @@ type StatusIndicatorProps = {
 
 export function StatusIndicator({ isDetected }: StatusIndicatorProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <div className="relative flex items-center justify-center">
-        <div
-          className={cn(
-            'absolute h-32 w-32 rounded-full',
-            isDetected
-              ? 'animate-ping-slow bg-destructive/50'
-              : 'bg-green-500/10'
-          )}
-        />
-        <div
-          className={cn(
-            'h-24 w-24 rounded-full transition-colors duration-500 border-4',
-            isDetected ? 'bg-destructive border-destructive-foreground/10' : 'bg-green-500 border-green-300/20'
-          )}
-        />
-      </div>
-      <div className="text-center">
-        <p className="font-bold text-2xl tracking-wider">
-          {isDetected ? 'INTRUSION' : 'ALL CLEAR'}
-        </p>
-        <p className="text-sm text-muted-foreground">Live System Status</p>
+    <div className="relative flex items-center justify-center h-40 w-40">
+      <div
+        className={cn(
+          'absolute h-full w-full rounded-full transition-all duration-500',
+          isDetected
+            ? 'animate-ping-slow bg-destructive/50'
+            : 'bg-primary/20'
+        )}
+      />
+      <div
+        className={cn(
+          'relative h-32 w-32 rounded-full flex items-center justify-center transition-colors duration-500 border-4',
+          isDetected ? 'bg-destructive/80 border-destructive-foreground/10' : 'bg-primary/70 border-green-300/20'
+        )}
+      >
+        {isDetected ? (
+          <ShieldAlert className="h-16 w-16 text-destructive-foreground" />
+        ) : (
+          <ShieldCheck className="h-16 w-16 text-primary-foreground" />
+        )}
       </div>
     </div>
   );
