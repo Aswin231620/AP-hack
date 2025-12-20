@@ -77,7 +77,7 @@ export function SpeciesIdentifier() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-accent" />
-          AI Species Identifier
+          Species Identifier
         </CardTitle>
         <CardDescription>
           Upload an image of an intruder to identify its species.
