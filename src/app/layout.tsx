@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'CropGuardian Dashboard',
-  description: 'A smart crop protection system dashboard.',
+  description: 'A non-lethal, sustainable solution to reduce crop loss and farmer risk.',
 };
 
 export default function RootLayout({

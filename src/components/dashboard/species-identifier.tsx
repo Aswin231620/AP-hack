@@ -80,7 +80,7 @@ export function SpeciesIdentifier() {
           Species Identifier
         </CardTitle>
         <CardDescription>
-          Upload an image of an intruder to identify its species.
+          Upload an image to identify the species. This helps in understanding animal behavior.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -108,7 +108,7 @@ export function SpeciesIdentifier() {
                 <div className="text-center p-4">
                     <UploadCloud className="mx-auto h-10 w-10 mb-2" />
                     <p className="font-semibold">Click to upload image</p>
-                    <p className="text-xs">Your privacy is respected. Images are not stored.</p>
+                    <p className="text-xs">Images are used for analysis and not stored.</p>
                 </div>
             )}
         </div>

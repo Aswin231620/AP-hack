@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ export function HistoryLog({ logs }: { logs: HistoryLogEntry[] }) {
             <History className="h-5 w-5 text-muted-foreground" />
             Recent Activity
         </CardTitle>
+        <CardDescription>
+          A log of the most recent animal intrusions.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-72">

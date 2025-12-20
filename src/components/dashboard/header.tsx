@@ -8,9 +8,14 @@ export function DashboardHeader() {
         <div className="bg-primary/10 p-2 rounded-lg">
           <ShieldCheck className="size-7 text-primary" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-          CropGuardian
-        </h1>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+            CropGuardian
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Eco-Friendly Farm Protection System
+          </p>
+        </div>
       </div>
       <ThemeToggle />
     </header>

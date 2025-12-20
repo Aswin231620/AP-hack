@@ -68,7 +68,7 @@ export default function Home() {
           toast({
             variant: "destructive",
             title: "🚨 Intrusion Alert!",
-            description: `Animal detected at ${newData.distance} cm.`,
+            description: `Animal detected at ${newData.distance} cm. Verification recommended.`,
           });
           setAlertSentForCurrentEvent(true);
           
@@ -116,15 +116,15 @@ export default function Home() {
           
           <div className="grid grid-cols-2 md:grid-cols-2 gap-6 xl:col-span-2">
              <DataCard 
-              title="System Status"
+              title="Defense System"
               icon={isDetected ? ShieldAlert : ShieldCheck}
-              value={isDetected ? 'Active Defense' : 'Monitoring'}
+              value={isDetected ? 'Active' : 'Monitoring'}
               loading={!sensorData}
               variant={isDetected ? 'destructive' : 'default'}
               valueSize="text-3xl"
             />
             <DataCard 
-              title="Repellent System"
+              title="Deterrent Status"
               icon={Zap}
               value={sensorData?.repellentStatus ?? 'N/A'}
               loading={!sensorData}
