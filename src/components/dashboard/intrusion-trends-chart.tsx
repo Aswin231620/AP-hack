@@ -4,23 +4,22 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDays } from "lucide-react"
+import { subDays, format } from 'date-fns';
 
-const chartData = [
-    { date: "2024-07-01", intrusions: 2 },
-    { date: "2024-07-02", intrusions: 1 },
-    { date: "2024-07-03", intrusions: 4 },
-    { date: "2024-07-04", intrusions: 2 },
-    { date: "2024-07-05", intrusions: 5 },
-    { date: "2024-07-06", intrusions: 3 },
-    { date: "2024-07-07", intrusions: 6 },
-    { date: "2024-07-08", intrusions: 4 },
-    { date: "2024-07-09", intrusions: 7 },
-    { date: "2024-07-10", intrusions: 5 },
-    { date: "2024-07-11", intrusions: 8 },
-    { date: "2024-07-12", intrusions: 6 },
-    { date: "2024-07-13", intrusions: 9 },
-    { date: "2024-07-14", intrusions: 7 },
-];
+// Generate dynamic data for the last 14 days
+const generateLast14DaysData = () => {
+  const today = new Date();
+  return Array.from({ length: 14 }).map((_, i) => {
+    const date = subDays(today, 13 - i);
+    return {
+      date: format(date, 'yyyy-MM-dd'),
+      intrusions: Math.floor(Math.random() * 10), // Keep random data for now
+    };
+  });
+};
+
+const chartData = generateLast14DaysData();
+
 
 const chartConfig = {
   intrusions: {
