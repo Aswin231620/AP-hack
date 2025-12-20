@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import {
   Zap,
@@ -21,12 +21,18 @@ import { DailyIntrusionsChart } from '@/components/dashboard/daily-intrusions-ch
 import { IntrusionTrendsChart } from '@/components/dashboard/intrusion-trends-chart';
 import { SpeciesIdentifier } from '@/components/dashboard/species-identifier';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeProvider } from '@/components/theme-provider';
 
+// Updated mock data generation based on hardware specs
 const generateMockData = (): SensorData => {
-  const isAnimalDetected = Math.random() > 0.8; // 20% chance of detection
+  // Simulate distance readings between 1 and 57 cm
+  const randomDistance = Math.floor(Math.random() * 57) + 1;
+  const isAnimalDetected = randomDistance <= 20;
+
   return {
     isAnimalDetected,
-    distance: isAnimalDetected ? Math.floor(Math.random() * (450 - 50 + 1)) + 50 : 0,
+    // If an animal is detected, show the actual distance. Otherwise, it's out of detection range.
+    distance: isAnimalDetected ? randomDistance : 0, 
     repellentStatus: isAnimalDetected ? 'ACTIVE' : 'IDLE',
     timestamp: Date.now(),
   };
@@ -67,10 +73,15 @@ export default function Home() {
           setAlertSentForCurrentEvent(true);
           
           setDailyIntrusions(prev => {
-            const today = new Date().getDay();
-            const dayIndex = (today + 6) % 7; // Convert Sunday=0 to Sat=6
+            const todayIndex = new Date().getDay();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = days[todayIndex];
+
             const newDaily = [...prev];
-            newDaily[dayIndex].intrusions += 1;
+            const dayEntry = newDaily.find(d => d.day === today);
+            if(dayEntry) {
+              dayEntry.intrusions += 1;
+            }
             return newDaily;
           });
         }
@@ -88,7 +99,7 @@ export default function Home() {
   const isDetected = sensorData?.isAnimalDetected ?? false;
 
   return (
-    <main className="min-h-screen bg-muted/20 p-4 sm:p-6 md:p-8">
+    <main className="min-h-screen bg-muted/20 dark:bg-background p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         <DashboardHeader />
         
@@ -96,39 +107,43 @@ export default function Home() {
           <Card className="xl:col-span-1 flex flex-col items-center justify-center p-6 bg-card">
             <StatusIndicator isDetected={isDetected} />
             <div className="text-center mt-4">
-              <p className={`text-3xl font-bold ${isDetected ? 'text-destructive' : 'text-primary'}`}>
+              <p className={`text-4xl font-bold ${isDetected ? 'text-destructive' : 'text-primary'}`}>
                 {isDetected ? 'INTRUSION' : 'ALL CLEAR'}
               </p>
-              <p className="text-muted-foreground">Live System Status</p>
+              <p className="text-lg text-muted-foreground">Live Field Status</p>
             </div>
           </Card>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2 gap-6 xl:col-span-2">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-6 xl:col-span-2">
              <DataCard 
               title="System Status"
               icon={isDetected ? ShieldAlert : ShieldCheck}
               value={isDetected ? 'Active Defense' : 'Monitoring'}
               loading={!sensorData}
               variant={isDetected ? 'destructive' : 'default'}
+              valueSize="text-3xl"
             />
             <DataCard 
-              title="Repellent"
+              title="Repellent System"
               icon={Zap}
-              value={sensorData?.repellentStatus ?? null}
+              value={sensorData?.repellentStatus ?? 'N/A'}
               loading={!sensorData}
+              valueSize="text-3xl"
             />
             <DataCard 
               title="Detection Distance" 
               icon={Ruler} 
               value={sensorData?.isAnimalDetected ? sensorData.distance : 'N/A'}
               unit="cm"
-              loading={!sensorData} 
+              loading={!sensorData}
+              valueSize="text-3xl"
             />
             <DataCard 
               title="Last Intrusion" 
               icon={History} 
-              value={lastDetection ? new Date(lastDetection.timestamp).toLocaleTimeString() : 'None today'}
+              value={lastDetection ? new Date(lastDetection.timestamp).toLocaleTimeString() : 'None'}
               loading={!sensorData} 
+              valueSize="text-3xl"
             />
           </div>
         </div>
