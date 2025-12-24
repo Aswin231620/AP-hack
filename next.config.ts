@@ -30,6 +30,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Add a rule to ignore watching certain files or directories
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        '**/.git/**',
+        '**/.next/**',
+        '**/node_modules/**',
+        '**/docs/**',
+        '**/*.json',
+        '**/*.md',
+        '**/*.lock',
+      ],
+    };
+
+    return config;
+  },
 };
 
 export default nextConfig;
