@@ -10,9 +10,10 @@ interface DataCardProps {
   icon: LucideIcon;
   loading?: boolean;
   variant?: 'default' | 'destructive';
+  valueSize?: string;
 }
 
-export function DataCard({ title, value, unit, icon: Icon, loading = false, variant = 'default' }: DataCardProps) {
+export function DataCard({ title, value, unit, icon: Icon, loading = false, variant = 'default', valueSize = 'text-2xl' }: DataCardProps) {
   const isDestructive = variant === 'destructive';
   return (
     <Card className="flex flex-col justify-between">
@@ -26,7 +27,7 @@ export function DataCard({ title, value, unit, icon: Icon, loading = false, vari
         {loading ? (
           <Skeleton className="h-8 w-3/4 mt-1" />
         ) : (
-          <div className={cn("text-2xl font-bold", isDestructive && "text-destructive")}>
+          <div className={cn("font-bold", valueSize, isDestructive && "text-destructive")}>
             {value ?? 'N/A'}
             {value != null && unit && <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>}
           </div>

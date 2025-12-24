@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { ref, onValue } from 'firebase/database';
+import { database } from '@/lib/firebase';
+
 import {
   Zap,
   ShieldCheck,
@@ -11,8 +13,8 @@ import {
   Ruler,
 } from 'lucide-react';
 
-import type { SensorData, HistoryLogEntry } from '@/lib/types';
-
+import type { HistoryLogEntry } from '@/lib/types';
+import { useToast } from "@/hooks/use-toast";
 import { DashboardHeader } from '@/components/dashboard/header';
 import { StatusIndicator } from '@/components/dashboard/status-indicator';
 import { DataCard } from '@/components/dashboard/data-card';
@@ -20,83 +22,83 @@ import { HistoryLog } from '@/components/dashboard/history-log';
 import { DailyIntrusionsChart } from '@/components/dashboard/daily-intrusions-chart';
 import { IntrusionTrendsChart } from '@/components/dashboard/intrusion-trends-chart';
 import { SpeciesIdentifier } from '@/components/dashboard/species-identifier';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ThemeProvider } from '@/components/theme-provider';
+import { Card, CardContent } from '@/components/ui/card';
 
-// Updated mock data generation based on hardware specs
-const generateMockData = (): SensorData => {
-  // Simulate distance readings between 1 and 57 cm
-  const randomDistance = Math.floor(Math.random() * 57) + 1;
-  const isAnimalDetected = randomDistance <= 20;
-
-  return {
-    isAnimalDetected,
-    // If an animal is detected, show the actual distance. Otherwise, it's out of detection range.
-    distance: isAnimalDetected ? randomDistance : 0, 
-    repellentStatus: isAnimalDetected ? 'ACTIVE' : 'IDLE',
-    timestamp: Date.now(),
-  };
+type RealtimeData = {
+    animalDetected: boolean;
+    distance_cm: number;
+    status: 'INTRUDER' | 'CLEAR';
 };
 
 export default function Home() {
   const { toast } = useToast();
-  const [sensorData, setSensorData] = useState<SensorData | null>(null);
+  const [realtimeData, setRealtimeData] = useState<RealtimeData | null>(null);
   const [history, setHistory] = useState<HistoryLogEntry[]>([]);
   const [alertSentForCurrentEvent, setAlertSentForCurrentEvent] = useState(false);
   const [dailyIntrusions, setDailyIntrusions] = useState(
     Array(7).fill(0).map((_, i) => ({
       day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(new Date().getDay() - 6 + i + 7) % 7],
-      intrusions: Math.floor(Math.random() * 5),
+      intrusions: 0,
     }))
   );
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newData = generateMockData();
-      setSensorData(newData);
+    const cropGuardianRef = ref(database, 'CropGuardian');
+    
+    const unsubscribe = onValue(cropGuardianRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const newData: RealtimeData = {
+          animalDetected: data.animalDetected,
+          distance_cm: data.distance_cm,
+          status: data.status,
+        };
+        setRealtimeData(newData);
 
-      if (newData.isAnimalDetected) {
-        if (!alertSentForCurrentEvent) {
-          const newEntry: HistoryLogEntry = {
-            id: newData.timestamp.toString(),
-            timestamp: newData.timestamp,
-            status: 'INTRUSION DETECTED',
-            distance: newData.distance,
-          };
-          setHistory(prev => [newEntry, ...prev].slice(0, 10));
+        if (newData.animalDetected) {
+          if (!alertSentForCurrentEvent) {
+            const intrusionEntry: HistoryLogEntry = {
+              id: new Date().toISOString(),
+              timestamp: Date.now(),
+              status: 'INTRUSION DETECTED',
+              distance: newData.distance_cm,
+            };
+            setHistory(prev => [intrusionEntry, ...prev].slice(0, 10));
 
-          toast({
-            variant: "destructive",
-            title: "🚨 Intrusion Alert!",
-            description: `Animal detected at ${newData.distance} cm. Verification recommended.`,
-          });
-          setAlertSentForCurrentEvent(true);
-          
-          setDailyIntrusions(prev => {
-            const todayIndex = new Date().getDay();
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const today = days[todayIndex];
+            toast({
+              variant: "destructive",
+              title: "🚨 Intrusion Alert!",
+              description: `Animal detected at ${newData.distance_cm} cm. Verification recommended.`,
+            });
+            setAlertSentForCurrentEvent(true);
+            
+            setDailyIntrusions(prev => {
+              const todayIndex = new Date().getDay();
+              const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+              const today = days[todayIndex];
 
-            const newDaily = [...prev];
-            const dayEntry = newDaily.find(d => d.day === today);
-            if(dayEntry) {
-              dayEntry.intrusions += 1;
-            }
-            return newDaily;
-          });
-        }
-      } else {
-        if (alertSentForCurrentEvent) {
-           setAlertSentForCurrentEvent(false);
+              const newDaily = [...prev];
+              const dayEntry = newDaily.find(d => d.day === today);
+              if(dayEntry) {
+                dayEntry.intrusions += 1;
+              }
+              return newDaily;
+            });
+          }
+        } else {
+          if (alertSentForCurrentEvent) {
+             setAlertSentForCurrentEvent(false);
+          }
         }
       }
-    }, 3000); // Update every 3 seconds
+    });
 
-    return () => clearInterval(interval);
+    return () => unsubscribe();
   }, [toast, alertSentForCurrentEvent]);
 
   const lastDetection = history.find(entry => entry.status === 'INTRUSION DETECTED');
-  const isDetected = sensorData?.isAnimalDetected ?? false;
+  const isDetected = realtimeData?.animalDetected ?? false;
+  const repellentStatus = isDetected ? 'ACTIVE' : 'IDLE';
 
   return (
     <main className="min-h-screen bg-muted/20 dark:bg-background p-4 sm:p-6 md:p-8">
@@ -119,31 +121,27 @@ export default function Home() {
               title="Defense System"
               icon={isDetected ? ShieldAlert : ShieldCheck}
               value={isDetected ? 'Active' : 'Monitoring'}
-              loading={!sensorData}
+              loading={!realtimeData}
               variant={isDetected ? 'destructive' : 'default'}
-              valueSize="text-3xl"
             />
             <DataCard 
               title="Deterrent Status"
               icon={Zap}
-              value={sensorData?.repellentStatus ?? 'N/A'}
-              loading={!sensorData}
-              valueSize="text-3xl"
+              value={repellentStatus}
+              loading={!realtimeData}
             />
             <DataCard 
               title="Detection Distance" 
               icon={Ruler} 
-              value={sensorData?.isAnimalDetected ? sensorData.distance : 'N/A'}
+              value={isDetected ? realtimeData?.distance_cm : 'N/A'}
               unit="cm"
-              loading={!sensorData}
-              valueSize="text-3xl"
+              loading={!realtimeData}
             />
             <DataCard 
               title="Last Intrusion" 
               icon={History} 
               value={lastDetection ? new Date(lastDetection.timestamp).toLocaleTimeString() : 'None'}
-              loading={!sensorData} 
-              valueSize="text-3xl"
+              loading={!realtimeData}
             />
           </div>
         </div>
