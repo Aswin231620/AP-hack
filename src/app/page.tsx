@@ -26,7 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 type RealtimeData = {
     animalDetected: boolean;
-    distance_cm: number;
+    distance: number;
     status: 'INTRUDER' | 'CLEAR';
 };
 
@@ -50,7 +50,7 @@ export default function Home() {
       if (data) {
         const newData: RealtimeData = {
           animalDetected: data.animalDetected,
-          distance_cm: data.distance_cm,
+          distance: data.distance,
           status: data.status,
         };
         setRealtimeData(newData);
@@ -61,14 +61,14 @@ export default function Home() {
               id: new Date().toISOString(),
               timestamp: Date.now(),
               status: 'INTRUSION DETECTED',
-              distance: newData.distance_cm,
+              distance: newData.distance,
             };
             setHistory(prev => [intrusionEntry, ...prev].slice(0, 10));
 
             toast({
               variant: "destructive",
               title: "🚨 Intrusion Alert!",
-              description: `Animal detected at ${newData.distance_cm} cm. Verification recommended.`,
+              description: `Animal detected at ${newData.distance} cm. Verification recommended.`,
             });
             setAlertSentForCurrentEvent(true);
             
@@ -133,7 +133,7 @@ export default function Home() {
             <DataCard 
               title="Detection Distance" 
               icon={Ruler} 
-              value={realtimeData?.distance_cm}
+              value={realtimeData?.distance}
               unit="cm"
               loading={!realtimeData}
             />
