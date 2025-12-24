@@ -133,7 +133,7 @@ export default function Home() {
             <DataCard 
               title="Detection Distance" 
               icon={Ruler} 
-              value={isDetected ? realtimeData?.distance_cm : 'N/A'}
+              value={realtimeData?.distance_cm}
               unit="cm"
               loading={!realtimeData}
             />
